@@ -1,0 +1,39 @@
+Title: Interprocess Trading Stack Walkthrough
+Duration Target: ~4 minutes
+Suggested Recording Setup: 4 PowerShell windows tiled (Gateway, OrderBook, Strategy, OrderManager) plus a Notepad window with performance_report.md for closing remarks. Capture with OBS at 1080p/30fps. Narrate live using the script below.
+
+---
+
+0:00 – 0:20  Introduce the project
+- Say: “Hi, this is the assignment 8 trading stack. We have four independent Python processes communicating via TCP sockets and shared memory.”
+- Briefly point to each terminal window: Gateway (top-left), OrderBook (top-right), Strategy (bottom-left), OrderManager (bottom-right).
+
+0:20 – 1:10  Start supporting services
+- In the OrderManager window, run `python order_manager.py`. Mention it listens for TCP orders and logs executions.
+- In the OrderBook window, run `python orderbook.py`. Explain that it connects to the price feed and writes the latest prices into shared memory.
+- Talk through how shared memory is recreated on start and that the strategy will attach later.
+
+1:10 – 2:10  Launch the Gateway
+- In the Gateway window, run `python gateway.py`.
+- Highlight the log message confirming price/news clients will connect.
+- Mention that prices are generated with a random-walk per symbol and news sentiment is random 0–100 values, all serialized with the shared delimiter.
+- Point at the OrderBook terminal showing a successful connection and shared-memory updates.
+
+2:10 – 3:10  Launch the Strategy
+- In the Strategy window, run `python strategy.py`.
+- Describe how it reads the shared-memory buffer, listens to the news stream, calculates short/long moving averages (3 vs 6 ticks), and only trades when price and sentiment agree.
+- Wait for a logged trade in the OrderManager window. Call out the order fields, especially the embedded latency figure.
+
+3:10 – 3:40  Demonstrate resiliency (optional clip)
+- Stop the Gateway process with `Ctrl+C`. Narrate how OrderBook reports the loss and retries the connection.
+- Restart the Gateway (`python gateway.py`) and point out how all other processes recover automatically and orders resume.
+
+3:40 – 4:00  Wrap-up with documentation
+- Switch briefly to Notepad showing `performance_report.md`. Summarize throughput (≈2 ticks/sec), decision latency (~40 ms), and reconnection behaviour.
+- Close by mentioning `pytest` tests (`python -m pytest`) and that configuration lives in `config.py` for easy tuning.
+
+---
+Recording Tips:
+- Keep microphone close to avoid room echo.
+- If a section produces no orders immediately, remind viewers that sentiment must align with price – let the logs run for a few seconds.
+- Trim any dead air at the start/end before exporting the final video.
